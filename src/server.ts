@@ -6,6 +6,7 @@ import morgan from 'morgan'
 import authRoutes from './routes/authRoutes.ts'
 import habitRoutes from './routes/habitRoutes.ts'
 import userRoutes from './routes/userRoutes.ts'
+import { APIError, errorHandler, notFound } from './middleware/errorHandler.ts'
 
 // create an express application
 const app = express()
@@ -39,6 +40,10 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/habits', habitRoutes)
+
+app.use(notFound)
+
+app.use(errorHandler)
 
 export { app }
 
