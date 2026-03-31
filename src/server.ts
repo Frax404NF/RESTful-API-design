@@ -6,7 +6,9 @@ import morgan from 'morgan'
 import authRoutes from './routes/authRoutes.ts'
 import habitRoutes from './routes/habitRoutes.ts'
 import userRoutes from './routes/userRoutes.ts'
+import tagRoutes from './routes/tagRoutes.ts'
 import { APIError, errorHandler, notFound } from './middleware/errorHandler.ts'
+import rateLimit from 'express-rate-limit'
 
 // create an express application
 const app = express()
@@ -36,10 +38,28 @@ app.get('/health', (req, res) => {
   });
 })
 
+// learn how to implement basic rate limit
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many requests', message: 'Please try again after 15 minutes' }
+})
+
+const genericLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  message: { error: 'Too many requests', message: 'Please try again after 15 minutes' }
+})
+
+// Apply rate limiters
+app.use('/api', genericLimiter)
+app.use('/api/auth', authLimiter)
+
 // Mount routers with base paths
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/habits', habitRoutes)
+app.use('/api/tags', tagRoutes)
 
 app.use(notFound)
 

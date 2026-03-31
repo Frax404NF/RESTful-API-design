@@ -1,28 +1,41 @@
 import { Router } from 'express'
 import { authenticationToken } from '../middleware/auth.ts'
+import { validateBody } from '../middleware/validation.ts'
+import { z } from 'zod'
+import {
+  getProfile,
+  updateProfile,
+  changePassword,
+} from '../controller/userController.ts'
 
 const router = Router()
 
 router.use(authenticationToken)
 
-router.get('/', (req, res) => {
-  res.json({ message: 'Get all users' })
+const updateProfileSchema = z.object({
+  email: z.string().email('Invalid email format').optional(),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(50, 'Username too long')
+    .optional(),
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
 })
 
-router.get('/:id', (req, res) => {
-  res.json({ message: `Get user ${req.params.id}` })
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Password must contain uppercase, lowercase, and number'
+    ),
 })
 
-router.post('/', (req, res) => {
-  res.status(201).json({ message: 'User Created' })
-})
-
-router.put('/:id', (req, res) => {
-  res.json({ message: `Update user ${req.params.id}` })
-})
-
-router.delete('/:id', (req, res) => {
-  res.json({ message: `Delete user ${req.params.id}` })
-})
+router.get('/profile', getProfile)
+router.put('/profile', validateBody(updateProfileSchema), updateProfile)
+router.post('/change-password', validateBody(changePasswordSchema), changePassword)
 
 export default router
